@@ -2,6 +2,35 @@
 
 A Claude Code skill that turns your Google Search Console data into monthly candlestick charts. See keyword ranking direction AND volatility at a glance.
 
+---
+
+# Install in one paste
+
+If you have [Claude Code](https://claude.com/claude-code) installed, this is all you need to do:
+
+1. Open a terminal and run `claude`
+2. Copy and paste this prompt:
+
+```
+Read the README at https://github.com/gareth-builds/gsc-candlestick-report and walk me through installing this skill from scratch. Treat me as a fresh install - assume I have nothing set up and verify each step. Stop and wait for me at every browser action. Once installed, ask me about my website and help me build the keyword list, then run my first report.
+```
+
+Claude does the rest. It will:
+
+- Check what's already installed on your machine
+- Walk you through Google Cloud setup (with clickable links)
+- Configure the GSC MCP server in your Claude Code settings
+- Install this skill into `~/.claude/skills/`
+- Ask you about your business and build a starter keyword list
+- Pull your data from Google Search Console
+- Generate your first candlestick report
+
+Total time: ~10 minutes, mostly waiting for Google Cloud screens to load.
+
+**Don't have Claude Code yet?** Get it free at https://claude.com/claude-code
+
+---
+
 ## Why candlesticks for SEO
 
 A single "average position" number lies. Daily rankings fluctuate across devices and locations, so averages hide the real story.
@@ -15,25 +44,9 @@ Candlesticks per keyword per month show:
 
 ---
 
-# How to install
+# Manual install (if you'd rather do it yourself)
 
-There are two ways: let Claude do it (easier) or follow the manual steps yourself. Both end at the same place.
-
-## Easy path: let Claude install it for you
-
-1. Install [Claude Code](https://claude.com/claude-code) if you do not have it
-2. Open a terminal in any folder and run `claude`
-3. Copy and paste this prompt into Claude Code:
-
-```
-Read the README at https://github.com/gareth-builds/gsc-candlestick-report and walk me through installing this skill from scratch. Treat me as a fresh install - assume I have nothing set up and verify each step. Stop and wait for me at every browser action. Once installed, ask me about my website and help me build the keyword list, then run my first report.
-```
-
-Claude will work through every stage with you, pausing at each browser action so you can complete it. Reply "done" when you finish each step. Total install time: ~10 minutes (mostly waiting on Google Cloud).
-
----
-
-## Manual install: the 4 stages
+The 5 stages below are exactly what Claude walks you through above. Use this if you prefer to follow steps manually, or if something breaks during the guided install.
 
 You only do this ONCE. After install, you can generate reports for any project in seconds.
 
