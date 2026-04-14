@@ -1,0 +1,47 @@
+# GSC Candlestick Report configuration
+# ------------------------------------
+# Rename this file to keywords.yml in your project directory,
+# then fill in your Search Console property and target keywords.
+#
+# Run the report with:  /gsc-candlestick-report
+
+# Your GSC property. Use the exact format Search Console shows you.
+#   Domain property:      sc-domain:example.co.nz
+#   URL-prefix property:  https://www.example.co.nz/
+site_url: sc-domain:example.co.nz
+
+# How many months of history to pull. Default is 6.
+months: 6
+
+# Keywords to track. Two formats supported.
+#
+# FORMAT 1: Simple flat list (easiest)
+# --------------------------------------
+# keywords:
+#   - drain unblockers auckland
+#   - blocked drain
+#   - hydro jetting
+#
+# FORMAT 2: Tiered by priority (better for bigger lists)
+# ------------------------------------------------------
+# Tiers help you segment the report into priority buckets.
+# Use any tier names you like. Common convention:
+#   tier_1  = commercial money terms
+#   tier_2  = supporting service terms
+#   tier_3  = long tail / lower priority
+#   content = blog and informational queries
+keywords:
+  tier_1:
+    - drain unblockers auckland
+    - blocked drain auckland
+    - drain cleaning service
+  tier_2:
+    - hydro jetting
+    - drain camera inspection
+    - drain repair
+  tier_3:
+    - smelly drain fix
+    - slow draining sink
+  content:
+    - how to unblock a drain
+    - signs your drain is blocked

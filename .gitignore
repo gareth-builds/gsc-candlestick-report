@@ -1,0 +1,19 @@
+# Local project outputs (these are generated per-project, never committed)
+keywords.yml
+candlestick-data.json
+candlestick-report.html
+build_candlestick_data.py
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+*.swp
