@@ -1,136 +1,194 @@
 # GSC Candlestick SEO Report
 
-A Claude Code skill that turns your Google Search Console data into monthly candlestick charts. See direction AND volatility of your keyword rankings at a glance.
+A Claude Code skill that turns your Google Search Console data into monthly candlestick charts. See keyword ranking direction AND volatility at a glance.
 
 ## Why candlesticks for SEO
 
-A single "average position" number is misleading. Daily rankings fluctuate across devices and locations, so averaging them hides the real story.
+A single "average position" number lies. Daily rankings fluctuate across devices and locations, so averages hide the real story.
 
-Candlesticks show the full picture per month:
+Candlesticks per keyword per month show:
 
-- **Body (open to close):** Did the keyword improve or decline that month?
-- **Wicks (high to low):** How volatile was it? Long wicks = Google is testing.
-- **Green candle:** Position improved (close is better than open)
-- **Red candle:** Position declined
-- **Goal:** Push candles up AND make them thinner (stable top positions)
+- **Body (open to close):** did the keyword improve or decline?
+- **Wicks (high to low):** how volatile? Long wicks = Google is testing placement
+- **Green candle:** position improved. **Red candle:** declined
+- **Goal:** push candles up AND make them thinner (stable top positions)
 
-## Requirements
+---
 
-You need all four before this skill will work:
+# How to install
 
-1. **[Claude Code](https://claude.com/claude-code)** installed
-2. **[AminForou/mcp-gsc](https://github.com/AminForou/mcp-gsc)** MCP server connected to Claude Code
-3. **Google OAuth credentials** for Search Console (the mcp-gsc README walks through this)
-4. **At least one Search Console property** you own
+There are two ways: let Claude do it (easier) or follow the manual steps yourself. Both end at the same place.
 
-If you skip any of these, the skill will stop and tell you what is missing.
+## Easy path: let Claude install it for you
 
-## Easiest setup: let Claude do it for you
-
-If you are new to MCP servers or do not want to follow the manual steps below, you can hand the whole setup to Claude Code.
-
-1. Clone this repo anywhere on your machine:
-
-```bash
-git clone https://github.com/garethdouble/gsc-candlestick-report ~/gsc-candlestick-report
-```
-
-2. Open that folder in Claude Code:
-
-```bash
-cd ~/gsc-candlestick-report
-claude
-```
-
+1. Install [Claude Code](https://claude.com/claude-code) if you do not have it
+2. Open Claude Code in any folder (e.g. `cd ~ && claude`)
 3. Paste this prompt:
 
-> Read the README.md in this folder. Help me:
-> 1. Install the GSC MCP server (AminForou/mcp-gsc) and connect it to Claude Code
-> 2. Move this skill into ~/.claude/skills/ so it loads automatically
-> 3. Ask me for my website URL and the keywords I want to track
-> 4. Create a keywords.yml file for me in a new project folder
-> 5. Run the report once we are set up
+> Read this README at https://github.com/garethdouble/gsc-candlestick-report and walk me through installing the skill from scratch. Treat me as a fresh install - assume I have nothing set up and check each step. Stop and wait for me at every browser action you need me to do.
 
-Claude will walk you through the OAuth setup, check the MCP is connected, install the skill, and ask you for your site and keywords. You do not need to understand the internals.
+Claude will work through the 4 stages below with you, pausing at every browser step. Reply "done" when you finish each one.
 
-## Manual install
+---
 
-### 1. Install the GSC MCP server
+## Manual install: the 4 stages
 
-Follow the full guide at [AminForou/mcp-gsc](https://github.com/AminForou/mcp-gsc).
+You only do this ONCE. After install, you can generate reports for any project in seconds.
 
-Short version:
+### Stage 1: Make sure you have Python and uv
+
+You need:
+- **Python 3.11 or higher** - check with `python3 --version`. Get it at [python.org/downloads](https://www.python.org/downloads/)
+- **uv** (provides the `uvx` command) - check with `which uvx`. If missing:
 
 ```bash
-git clone https://github.com/AminForou/mcp-gsc ~/mcp-gsc
-cd ~/mcp-gsc
-# Follow the repo's setup for Google OAuth service account credentials
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Then register it in `~/.claude/settings.json`:
+Open a new terminal tab so PATH refreshes.
+
+### Stage 2: Set up Google Cloud + Search Console API
+
+Google requires you to identify yourself before using their API. This is a one-time setup that takes ~5 minutes.
+
+#### 2.1 Create a Google Cloud project
+
+Go to https://console.cloud.google.com/projectcreate
+
+- Project name: `GSC Candlestick` (or anything memorable)
+- Click **CREATE**
+- Wait 10-30 seconds for it to finish
+- **Confirm the new project is selected** in the top-left dropdown
+
+#### 2.2 Enable the Search Console API
+
+Go to https://console.cloud.google.com/apis/library/searchconsole.googleapis.com
+
+- Confirm your new project is selected in the top-left
+- Click **ENABLE**
+- Wait for the green checkmark
+
+#### 2.3 Configure the OAuth consent screen
+
+Go to https://console.cloud.google.com/apis/credentials/consent
+
+- User Type: select **External**, click **CREATE**
+- App name: `GSC Candlestick`
+- User support email: pick your email
+- Developer contact: pick your email
+- Click **SAVE AND CONTINUE** through Scopes screen (no changes)
+- On the **Test users** screen, click **ADD USERS** and add your own Google account email. **This is required** - without it, OAuth will fail
+- Click **SAVE AND CONTINUE**, then **BACK TO DASHBOARD**
+
+#### 2.4 Create OAuth credentials and download the JSON
+
+Go to https://console.cloud.google.com/apis/credentials
+
+- Click **CREATE CREDENTIALS** at the top
+- Select **OAuth client ID**
+- Application type: **Desktop app**
+- Name: `GSC Candlestick Local`
+- Click **CREATE**
+- A popup appears - click **DOWNLOAD JSON**
+- Save the file somewhere you will remember:
+
+```bash
+mkdir -p ~/Documents/gsc-secrets
+mv ~/Downloads/client_secret_*.json ~/Documents/gsc-secrets/client_secret.json
+```
+
+You now have a `client_secret.json` file. **Note its full path** - you need it in Stage 3.
+
+### Stage 3: Connect the GSC MCP server to Claude Code
+
+Open or create `~/.claude/settings.json` and add the GSC MCP entry:
 
 ```json
 {
   "mcpServers": {
     "gsc": {
-      "command": "python",
-      "args": ["-m", "mcp_gsc"],
+      "command": "uvx",
+      "args": ["mcp-gsc"],
       "env": {
-        "GOOGLE_APPLICATION_CREDENTIALS": "/absolute/path/to/service-account.json"
+        "GOOGLE_CLIENT_SECRETS_FILE": "/Users/yourname/Documents/gsc-secrets/client_secret.json"
       }
     }
   }
 }
 ```
 
-Restart Claude Code. Run `/mcp` to confirm `gsc` shows as connected.
+Replace the path with the full path to YOUR `client_secret.json`.
 
-### 2. Install this skill
+If the file already has other MCP servers, just add the `gsc` entry inside the existing `mcpServers` object - do not delete anything.
+
+### Stage 4: Install this skill
 
 ```bash
 git clone https://github.com/garethdouble/gsc-candlestick-report \
   ~/.claude/skills/gsc-candlestick-report
 ```
 
-Restart Claude Code. The skill is now available in every session.
+### Stage 5: Restart Claude Code
 
-## Use it
+1. Quit Claude Code completely (Cmd+Q on Mac, close all windows on Windows)
+2. Reopen it
+3. Run `/mcp` and confirm `gsc` shows as connected
+4. The first time you call a GSC tool, your browser will open asking you to sign in to Google and grant Search Console access. Approve it.
 
-### First run on a new project
+You are now installed forever. Move on to "How to use it" below.
+
+---
+
+# How to use it
+
+After install, generating a report on any site takes ~30 seconds.
+
+### Option A: You already have keywords
+
+1. `cd` to your project folder (or pick one - if you do not have one, the skill will offer to create `~/Documents/seo-reports/<sitename>` for you)
+2. Copy the example config:
 
 ```bash
-cd ~/path/to/your-project
 cp ~/.claude/skills/gsc-candlestick-report/keywords.example.yml keywords.yml
 ```
 
-Edit `keywords.yml` - add your site URL and the keywords you want to track:
-
-```yaml
-site_url: sc-domain:example.co.nz
-months: 6
-keywords:
-  - your first keyword
-  - your second keyword
-  - your third keyword
-```
-
-Then in Claude Code:
+3. Edit `keywords.yml` - add your site URL and target keywords
+4. In Claude Code, run:
 
 ```
 /gsc-candlestick-report
 ```
 
-The skill will:
+### Option B: Let Claude help you build the keyword list
 
-1. Read your `keywords.yml`
-2. Pull 6 months of daily position data from GSC (in parallel)
-3. Write `candlestick-report.html` to your project directory
-4. Open it in your browser
-5. Summarise movers, volatility, and suggested next actions
+If you do not know what keywords to track, just run `/gsc-candlestick-report` in any folder. The skill will:
 
-### Tiered keyword tracking
+1. Detect there is no `keywords.yml`
+2. Ask you about your business, services, location, competitors
+3. Suggest a starter keyword list
+4. Write `keywords.yml` for you
+5. Pull the data and generate the report
 
-For bigger lists, group keywords by priority:
+You spend ~2 minutes answering questions. Claude does the rest.
+
+---
+
+# Configuration reference
+
+Drop a `keywords.yml` into any project folder. Two formats supported:
+
+### Flat list
+
+```yaml
+site_url: sc-domain:example.co.nz
+months: 6
+keywords:
+  - drain unblockers auckland
+  - blocked drain
+  - hydro jetting
+```
+
+### Tiered (better for bigger lists)
 
 ```yaml
 site_url: sc-domain:example.co.nz
@@ -145,31 +203,48 @@ keywords:
     - informational blog query
 ```
 
-The report sections mirror your tiers.
+### site_url format
 
-## Configuration reference
+Use the exact string Search Console shows:
 
-| Key | Required | Default | Notes |
-|-----|----------|---------|-------|
-| `site_url` | Yes | - | Use exact format from Search Console. Domain property: `sc-domain:example.co.nz`. URL-prefix: `https://www.example.co.nz/` |
-| `months` | No | 6 | How many months of history to pull |
-| `keywords` | Yes | - | Flat list OR dict of tiers |
+- Domain property: `sc-domain:example.co.nz`
+- URL-prefix property: `https://www.example.co.nz/`
 
-## Troubleshooting
+If unsure, just put a placeholder. The skill will list your verified properties and let you pick.
 
-**"mcp__gsc__get_advanced_search_analytics not found"**
-The GSC MCP is not connected. Go back to the install step and verify `/mcp` shows `gsc` as connected.
+### months
 
-**"No data returned for keyword X"**
-The keyword gets fewer than 5 impressions per day. Try a broader term, or accept that it will appear with no candle.
+How many months of history to pull. Default `6`. Max `16` (Google's limit on Search Console data retention).
 
-**"site_url not recognised"**
-Use the exact format GSC shows you. For domain properties the prefix `sc-domain:` is required.
+---
 
-**Report is empty / no candles render**
-Check `candlestick-data.json` in your project directory. If `daily_data` arrays are empty, GSC has no data for those queries in the window. Try widening `months`.
+# Troubleshooting
 
-## How it works
+### "MCP not connected" or "tool not found"
+
+Your `~/.claude/settings.json` is missing the `gsc` entry, OR Claude Code has not been restarted since you added it. Run `/mcp` in Claude Code to confirm. If `gsc` is missing, recheck Stage 3.
+
+### Browser does not open on first GSC call
+
+The first call to any GSC tool should open a browser window. If it does not, check the terminal for an OAuth URL and paste it manually.
+
+### "access_denied" or "this app is not verified"
+
+You are signed into a Google account that is not in the **Test users** list from Stage 2.3. Either:
+- Sign in with the email you added as a test user, or
+- Go back to https://console.cloud.google.com/apis/credentials/consent and add your account
+
+### "No data returned for keyword X"
+
+The keyword gets fewer than 5 impressions per day in GSC. Try a broader term or accept the keyword will appear with no candle.
+
+### "Quota exceeded"
+
+You hit Google's per-minute API quota (1200 calls/minute). Wait 60 seconds and rerun. Unlikely with normal use.
+
+---
+
+# How it works
 
 ```
 your-project/
@@ -178,19 +253,21 @@ your-project/
 └── candlestick-report.html   ← skill generates (the report you open)
 ```
 
-The skill itself lives at `~/.claude/skills/gsc-candlestick-report/`. It contains:
+The skill itself lives at `~/.claude/skills/gsc-candlestick-report/`:
 
-- `SKILL.md` - the instructions Claude Code follows
+- `SKILL.md` - the instructions Claude follows when you run `/gsc-candlestick-report`
 - `scripts/generate_candlestick_report.py` - pure Python, zero dependencies, renders the HTML
-- `keywords.example.yml` - the template you copy into each project
+- `keywords.example.yml` - the template you copy
 
 The HTML output is self-contained. No CDN, no JavaScript frameworks. You can email it, archive it, or open it offline.
 
-## License
+---
+
+# License
 
 MIT. See [LICENSE](LICENSE).
 
-## Credits
+# Credits
 
 Built by Gareth Klapproth at [Double](https://double.nz) - a performance-led digital agency in NZ and AU.
 

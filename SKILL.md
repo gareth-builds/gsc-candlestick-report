@@ -1,61 +1,100 @@
 ---
 name: gsc-candlestick-report
-description: Generate an HTML candlestick SEO report from Google Search Console data. Use this skill whenever the user asks for a keyword ranking report, candlestick chart, monthly SEO report, position tracking visualisation, or wants to see how their keywords are trending over time. Also trigger when they mention "candlestick", "OHLC", "ranking variance", or "monthly keyword positions". Reads configuration from keywords.yml in the current project directory, with CLAUDE.md as a fallback.
+description: Generate an HTML candlestick SEO report from Google Search Console data. Use this skill whenever the user asks for a keyword ranking report, candlestick chart, monthly SEO report, position tracking visualisation, or wants to see how their keywords are trending over time. Also trigger when they mention "candlestick", "OHLC", "ranking variance", or "monthly keyword positions". This skill assumes the user has already completed installation per README.md - if the GSC MCP is not connected, halt and point the user to README.md.
 ---
 
 # GSC Candlestick SEO Report
 
-Generate a standalone HTML report showing keyword ranking trends using candlestick charts. Each keyword gets a monthly candle showing open, close, best and worst positions - making it easy to see both direction and stability at a glance.
+Generate a self-contained HTML report showing keyword ranking trends as monthly candlestick charts. Each candle shows open, close, best and worst position - so direction AND volatility are visible at a glance.
 
-## Why candlesticks for SEO
+## Prerequisite check (run first, every time)
 
-A single average position number is misleading. Daily rankings fluctuate significantly across devices and locations. Candlestick charts show the full picture:
-- **Body (open to close):** Did the keyword improve or decline during the month?
-- **Wicks (high to low):** How much variance was there? Longer wicks = more instability
-- **Green candle:** Position improved (close better than open)
-- **Red candle:** Position declined (close worse than open)
-- **Goal:** Move candles up (lower position numbers) AND make them thinner (less variance)
+Use ToolSearch with `select:mcp__gsc__get_advanced_search_analytics` to load the GSC tool schema.
 
-## Prerequisites
+- If the tool loads: setup is complete, proceed to Stage 1.
+- If the tool fails to load: the GSC MCP is not connected. **STOP** and tell the user:
 
-Before running, confirm the user has:
-1. The GSC MCP server connected (provides `mcp__gsc__*` tools). If `mcp__gsc__get_advanced_search_analytics` is not available via ToolSearch, stop and tell the user to install the MCP first (see README.md in this skill directory).
-2. Access to at least one Search Console property.
+> The GSC MCP server is not installed or not connected. Please complete installation first - see the README at:
+>
+> https://github.com/garethdouble/gsc-candlestick-report#install
+>
+> Or just say "install GSC candlestick" and I will read the README and walk you through setup.
+>
+> Once installed and Claude Code is restarted, run /gsc-candlestick-report again.
 
-## Workflow
+Do not try to generate a report without the MCP.
 
-### Step 1: Gather configuration
+---
 
-Look for configuration in this order:
+## Stage 1: Project directory
 
-**A) `keywords.yml` in the current project directory (preferred).**
+Run `pwd`. Capture the result.
 
-Read it. It contains:
-- `site_url`: the GSC property (e.g. `sc-domain:example.co.nz` or `https://www.example.co.nz/`)
-- `months`: history window, default 6
-- `keywords`: either a flat list OR a dict of tiers (e.g. `tier_1`, `tier_2`, `tier_3`, `content`)
+If the path is `$HOME` or some non-project location, ask the user:
 
-**B) `CLAUDE.md` in the current project directory (fallback).**
+> I need a project folder to save your report in. Want me to create `~/Documents/seo-reports/<sitename>`, or do you have a specific path in mind?
 
-If `keywords.yml` does not exist, look in CLAUDE.md for:
-- A site URL or `sc-domain:` reference
-- Keyword tables or lists, optionally organised by tier
+Wait for response. Create or `cd` to the chosen directory. Confirm with `pwd`.
 
-**C) Ask the user.**
+If the path is already a sensible project directory, proceed.
 
-If neither file is found, prompt the user to either create `keywords.yml` (show them `keywords.example.yml` in this skill directory as a template) or paste their keywords into the conversation.
+---
 
-If the user passes keywords directly in their prompt, those override everything above.
+## Stage 2: Keywords config
 
-If `site_url` is ambiguous or missing, call `mcp__gsc__list_properties` and ask the user which one to use.
+Run `ls keywords.yml` in the current directory.
 
-### Step 2: Pull daily position data from GSC
+**If `keywords.yml` exists:** read it. Validate `site_url` and a non-empty `keywords` section. Proceed to Stage 3.
 
-You need the `mcp__gsc__get_advanced_search_analytics` tool. If it is not loaded yet, use ToolSearch to fetch its schema first.
+**If missing:** ask the user:
 
-For each target keyword, call with:
-- `site_url`: the GSC property from config
-- `start_date`: N months ago, where N is `months` from config (default 6)
+> No `keywords.yml` found in this folder. Do you have a list of keywords ready, or should I help you build one?
+
+If they have keywords: ask for the site URL and keyword list. Write `keywords.yml` in the format below.
+
+If they need help: ask one at a time:
+1. Website URL
+2. Industry / what the business does
+3. Top 3 services or products
+4. City / region (if local)
+5. Top 2 to 3 competitors
+
+Suggest 10 to 20 starter keywords mixing branded, service, and intent. Confirm with the user. Write `keywords.yml`.
+
+### keywords.yml format
+
+```yaml
+site_url: sc-domain:example.co.nz
+months: 6
+keywords:
+  tier_1:
+    - primary keyword
+    - another primary keyword
+  tier_2:
+    - supporting keyword
+  content:
+    - blog query
+```
+
+A flat list is also valid:
+
+```yaml
+site_url: sc-domain:example.co.nz
+months: 6
+keywords:
+  - keyword one
+  - keyword two
+```
+
+If the user is unsure which `site_url` format to use, call `mcp__gsc__list_properties` and let them pick.
+
+---
+
+## Stage 3: Pull GSC data
+
+For each keyword, call `mcp__gsc__get_advanced_search_analytics` with:
+- `site_url`: from config
+- `start_date`: N months ago (N = `months` from config, default 6)
 - `end_date`: today
 - `dimensions`: `"date"`
 - `filter_dimension`: `"query"`
@@ -64,27 +103,19 @@ For each target keyword, call with:
 - `row_limit`: 500
 - `data_state`: `"all"`
 
-**Batch these calls in parallel.** Make as many parallel MCP tool calls as possible (up to 16 at a time) to minimise total time. For 29 keywords, that is 2 batches.
+**Batch in parallel.** Up to 16 calls per batch.
 
-### Step 3: Assemble the data file
+---
 
-This is the most context-intensive step. The approach depends on keyword count:
+## Stage 4: Build candlestick-data.json
 
-**For 15 or fewer keywords:** Write `candlestick-data.json` directly in the project directory.
+**For 15 or fewer keywords:** write `candlestick-data.json` directly.
 
-**For 16+ keywords:** Delegate to a subagent using the Agent tool. The subagent should:
-1. Write a Python script at `<project-dir>/build_candlestick_data.py` that hardcodes all the daily data from the GSC responses
-2. Run it to output `candlestick-data.json`
-3. This keeps the large data volume out of the main conversation context
+**For 16+ keywords:** delegate to a subagent. Have it write a Python script `build_candlestick_data.py` in the project dir that hardcodes the daily data, run it, and output `candlestick-data.json`. This keeps the data volume out of the main conversation context.
 
-When briefing the subagent, pass it:
-- The site URL and report date
-- The keyword tier assignments
-- The raw daily_data arrays for each keyword (from the GSC responses you already fetched)
+Strip rows where `impressions == 0` AND `position == 0` before writing - they are no-data days. Removes 30 to 60 percent of file size.
 
-**Data filtering:** Before writing, strip rows where `impressions == 0` AND `position == 0`. These are days with no data. The report script already filters at MIN_IMPRESSIONS=5, so low-impression days are excluded from candle calculations automatically. Removing zero rows reduces file size by 30 to 60 percent.
-
-**JSON structure:**
+### Structure
 
 ```json
 {
@@ -100,52 +131,51 @@ When briefing the subagent, pass it:
       }
     ],
     "tier_2": [],
-    "tier_3": [],
     "content": []
   }
 }
 ```
 
-If the config uses a flat keyword list (no tiers), put everything under a single key called `"keywords"` as the tier name. The report script handles any tier key names.
+For flat keyword lists with no tiers, put everything under a single `"keywords"` key.
 
-Each keyword's `daily_data` comes from the GSC API response `rows`. If a keyword returned no data, include it with an empty `daily_data` array.
+---
 
-### Step 4: Generate the HTML report
-
-Run the Python script that ships with this skill:
+## Stage 5: Generate the HTML
 
 ```bash
 python3 ~/.claude/skills/gsc-candlestick-report/scripts/generate_candlestick_report.py \
-  <project-dir>/candlestick-data.json \
-  <project-dir>/candlestick-report.html
+  ./candlestick-data.json \
+  ./candlestick-report.html
 ```
 
-If the skill was installed at a different path (e.g. `~/.claude/commands/`), adjust accordingly. The SKILL.md location is self-describing - use the `scripts/` folder next to this file.
+If the skill is installed at a different path (e.g. `~/.claude/commands/`), adjust accordingly. The `scripts/` folder is always next to this SKILL.md.
 
-### Step 5: Open and summarise
+---
 
-Open the generated HTML file:
+## Stage 6: Open and summarise
 
 ```bash
-open <project-dir>/candlestick-report.html
+open ./candlestick-report.html
 ```
 
-Tell the user where the files are saved, then provide a structured summary:
+Summarise in this structure:
 
-**Improving** - Keywords with green candles moving up (list the strongest movers with position ranges)
+**Improving** - keywords with green candles moving up. List the strongest movers with position ranges.
 
-**High variance / Google testing** - Keywords with wide wicks where Google is experimenting with placement. These are opportunities - the algorithm is considering the page for better positions
+**High variance / Google testing** - keywords with wide wicks. Google is experimenting with placement - opportunity.
 
-**Declining or stuck** - Keywords that regressed or flatlined. Flag any that dropped off significantly
+**Declining or stuck** - keywords that regressed or flatlined. Flag drop-offs.
 
-**Action items** - Based on the patterns, suggest 2 to 3 specific next steps (e.g. "investigate why X dropped in April", "Y is close to page 1, push with internal linking")
+**Action items** - 2 to 3 concrete next steps based on patterns.
+
+---
 
 ## Notes
 
-- The script has zero external dependencies - just Python 3 stdlib
-- The HTML report is fully self-contained (inline CSS, SVG charts, no CDN dependencies)
-- Position scale is inverted: position 1 at the top of each chart
-- Months with no data for a keyword are skipped (no candle drawn)
-- Hover over any candle body to see detailed metrics (position OHLC, impressions, clicks, CTR, variance)
-- Keywords with fewer than 2 months of data show "NEW" instead of improving/declining
-- The `build_candlestick_data.py` script left in the project directory is reusable for future runs
+- The render script uses Python 3 stdlib only - no dependencies
+- HTML report is fully self-contained (inline CSS, SVG charts, no CDN)
+- Position scale is inverted: position 1 at the top
+- Months with no data are skipped
+- Hover any candle for detailed metrics
+- Keywords with under 2 months of data show "NEW"
+- The `build_candlestick_data.py` script in the project is reusable - on future runs you can skip Stage 3 if data is fresh enough
