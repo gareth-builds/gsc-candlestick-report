@@ -16,7 +16,7 @@ Use ToolSearch with `select:mcp__gsc__get_advanced_search_analytics` to load the
 
 > The GSC MCP server is not installed or not connected. Please complete installation first - see the README at:
 >
-> https://github.com/garethdouble/gsc-candlestick-report#install
+> https://github.com/gareth-builds/gsc-candlestick-report#install
 >
 > Or just say "install GSC candlestick" and I will read the README and walk you through setup.
 >

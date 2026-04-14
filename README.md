@@ -25,7 +25,7 @@ There are two ways: let Claude do it (easier) or follow the manual steps yoursel
 2. Open Claude Code in any folder (e.g. `cd ~ && claude`)
 3. Paste this prompt:
 
-> Read this README at https://github.com/garethdouble/gsc-candlestick-report and walk me through installing the skill from scratch. Treat me as a fresh install - assume I have nothing set up and check each step. Stop and wait for me at every browser action you need me to do.
+> Read this README at https://github.com/gareth-builds/gsc-candlestick-report and walk me through installing the skill from scratch. Treat me as a fresh install - assume I have nothing set up and check each step. Stop and wait for me at every browser action you need me to do.
 
 Claude will work through the 4 stages below with you, pausing at every browser step. Reply "done" when you finish each one.
 
@@ -124,7 +124,7 @@ If the file already has other MCP servers, just add the `gsc` entry inside the e
 ### Stage 4: Install this skill
 
 ```bash
-git clone https://github.com/garethdouble/gsc-candlestick-report \
+git clone https://github.com/gareth-builds/gsc-candlestick-report \
   ~/.claude/skills/gsc-candlestick-report
 ```
 
