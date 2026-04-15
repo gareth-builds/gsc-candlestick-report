@@ -4,12 +4,11 @@ A Claude Code skill that turns your Google Search Console data into monthly cand
 
 ---
 
-# Install in one paste
+# How to install: copy the prompt below into Claude Code
 
-If you have [Claude Code](https://claude.com/claude-code) installed, this is all you need to do:
+This is the entire install. **Copy the prompt block, paste it into Claude Code, and answer Claude's questions as it walks you through.** Total time: ~10 minutes on a fresh machine.
 
-1. Open a terminal and run `claude`
-2. Copy and paste this prompt:
+> **Step 1 of 1:** open a terminal, run `claude`, then paste this prompt:
 
 ```
 Read the README at https://github.com/gareth-builds/gsc-candlestick-report and walk me through installing and running this skill from scratch.
@@ -32,9 +31,31 @@ REPORT PHASE (after restart):
 - Summarise improving keywords, high-variance keywords, and declining keywords. Suggest 2-3 specific next actions.
 ```
 
-Total time: ~10 minutes for first install (mostly waiting for Google Cloud screens). Future reports take ~30 seconds.
+That's it. Claude does everything else.
 
-**Don't have Claude Code yet?** Get it free at https://claude.com/claude-code
+Future reports take ~30 seconds: just `cd` to a new project folder and run `/gsc-candlestick-report`.
+
+---
+
+# Before you start: what you need
+
+Make sure you have all four of these. If any are missing, get them sorted before you paste the install prompt above. Claude will check anyway, but starting with them in place saves time.
+
+| What | Why you need it | Where to get it | Cost |
+|------|-----------------|-----------------|------|
+| **Claude Code** | Runs the skill | https://claude.com/claude-code | Free |
+| **A Google account** | Owns the Search Console property and Google Cloud project | You probably have one | Free |
+| **A verified Search Console property** | This is the data the report pulls | https://search.google.com/search-console - add and verify your domain | Free |
+| **5 minutes of admin patience** | You'll click through Google Cloud Console screens | n/a | n/a |
+
+What Claude will install for you (don't do these yourself):
+- **Python 3.11+** if not already on your machine
+- **uv** (Python package manager that runs `uvx`)
+- **mcp-gsc** server (the bridge between Claude Code and Search Console)
+- **A Google Cloud project** with the Search Console API enabled and OAuth credentials
+- **This skill itself** into `~/.claude/skills/gsc-candlestick-report`
+
+You'll be prompted at each step. No surprise installs.
 
 ---
 
