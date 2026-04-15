@@ -51,7 +51,7 @@ Make sure you have all four of these. If any are missing, get them sorted before
 What Claude will install for you (don't do these yourself):
 - **Python 3.11+** if not already on your machine
 - **uv** (Python package manager that runs `uvx`)
-- **mcp-gsc** server (the bridge between Claude Code and Search Console)
+- **[mcp-gsc](https://github.com/AminForou/mcp-gsc)** server by Amin Forou (the bridge between Claude Code and Search Console)
 - **A Google Cloud project** with the Search Console API enabled and OAuth credentials
 - **This skill itself** into `~/.claude/skills/gsc-candlestick-report`
 
@@ -137,10 +137,11 @@ Go to https://console.cloud.google.com/apis/credentials
 
 ```bash
 mkdir -p ~/Documents/gsc-secrets
-mv ~/Downloads/client_secret_*.json ~/Documents/gsc-secrets/client_secret.json
+mv ~/Downloads/client_secret_*.json ~/Documents/gsc-secrets/client_secrets.json
+# Google downloads the file as client_secret_<id>.json - we rename to client_secrets.json to match the MCP server's default
 ```
 
-You now have a `client_secret.json` file. **Note its full path** - you need it in Stage 3.
+You now have a `client_secrets.json` file. **Note its full path** - you need it in Stage 3.
 
 ### Stage 3: Connect the GSC MCP server to Claude Code
 
@@ -153,14 +154,14 @@ Open or create `~/.claude/settings.json` and add the GSC MCP entry:
       "command": "uvx",
       "args": ["mcp-gsc"],
       "env": {
-        "GOOGLE_CLIENT_SECRETS_FILE": "/Users/yourname/Documents/gsc-secrets/client_secret.json"
+        "GSC_OAUTH_CLIENT_SECRETS_FILE": "/Users/yourname/Documents/gsc-secrets/client_secrets.json"
       }
     }
   }
 }
 ```
 
-Replace the path with the full path to YOUR `client_secret.json`.
+Replace the path with the full path to YOUR `client_secrets.json`.
 
 If the file already has other MCP servers, just add the `gsc` entry inside the existing `mcpServers` object - do not delete anything.
 
