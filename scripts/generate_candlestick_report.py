@@ -42,10 +42,8 @@ def process_data(data):
             keyword = kw_data["keyword"]
             daily = kw_data.get("daily_data", [])
 
-            # Filter out days below the impression threshold before grouping
-            daily = [d for d in daily if d.get("impressions", 0) >= MIN_IMPRESSIONS]
-
-            # Group by month
+            # Group ALL days by month for accurate click/impression totals.
+            # Position stats are computed from a noise-filtered subset below.
             monthly = defaultdict(list)
             for day in daily:
                 month_key = day["date"][:7]
@@ -54,16 +52,18 @@ def process_data(data):
             # Calculate OHLC per month
             candles = []
             for month, days in sorted(monthly.items()):
-                positions = [d["position"] for d in days if d.get("position")]
+                # Position stats use only days above the noise threshold
+                pos_days = [d for d in days if d.get("impressions", 0) >= MIN_IMPRESSIONS]
+                positions = [d["position"] for d in pos_days if d.get("position")]
                 if not positions:
                     continue
 
-                days_sorted = sorted(days, key=lambda d: d["date"])
+                pos_days_sorted = sorted(pos_days, key=lambda d: d["date"])
 
                 candle = {
                     "month": month,
-                    "open": days_sorted[0]["position"],
-                    "close": days_sorted[-1]["position"],
+                    "open": pos_days_sorted[0]["position"],
+                    "close": pos_days_sorted[-1]["position"],
                     "high": min(positions),       # Best position (lowest number)
                     "low": max(positions),        # Worst position (highest number)
                     "impressions": sum(d.get("impressions", 0) for d in days),
