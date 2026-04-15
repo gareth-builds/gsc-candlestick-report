@@ -33,7 +33,7 @@ REPORT PHASE (after restart):
 
 That's it. Claude does everything else.
 
-Future reports take ~30 seconds: just `cd` to a new project folder and run `/gsc-candlestick-report`.
+Future reports take ~30 seconds. In a project folder, either run `/gsc-candlestick-report` or just say "create a candlestick chart for <site>" - the skill auto-triggers on natural language.
 
 ---
 
@@ -196,11 +196,7 @@ cp ~/.claude/skills/gsc-candlestick-report/keywords.example.yml keywords.yml
 ```
 
 3. Edit `keywords.yml` - add your site URL and target keywords
-4. In Claude Code, run:
-
-```
-/gsc-candlestick-report
-```
+4. In Claude Code, either run `/gsc-candlestick-report` or say something like "create a candlestick chart for this site" - the skill auto-triggers on natural language
 
 ### Option B: Let Claude help you build the keyword list
 

@@ -142,13 +142,13 @@ For flat keyword lists with no tiers, put everything under a single `"keywords"`
 
 ## Stage 5: Generate the HTML
 
+The render script lives at `scripts/generate_candlestick_report.py` inside this skill's own folder. The canonical install path is `~/.claude/skills/gsc-candlestick-report/`:
+
 ```bash
 python3 ~/.claude/skills/gsc-candlestick-report/scripts/generate_candlestick_report.py \
   ./candlestick-data.json \
   ./candlestick-report.html
 ```
-
-If the skill is installed at a different path (e.g. `~/.claude/commands/`), adjust accordingly. The `scripts/` folder is always next to this SKILL.md.
 
 ---
 
