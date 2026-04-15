@@ -12,20 +12,27 @@ If you have [Claude Code](https://claude.com/claude-code) installed, this is all
 2. Copy and paste this prompt:
 
 ```
-Read the README at https://github.com/gareth-builds/gsc-candlestick-report and walk me through installing this skill from scratch. Treat me as a fresh install - assume I have nothing set up and verify each step. Stop and wait for me at every browser action. Once installed, ask me about my website and help me build the keyword list, then run my first report.
+Read the README at https://github.com/gareth-builds/gsc-candlestick-report and walk me through installing and running this skill from scratch.
+
+INSTALL PHASE:
+- Treat me as a fresh install. Verify each step instead of assuming.
+- Check whether Python 3.11+, uv, the GSC MCP, and the skill itself are already on my machine. Skip what's already there.
+- Walk me through Google Cloud setup with clickable links, one screen at a time.
+- Stop and wait for me at every browser action. Do not move on until I reply "done".
+- After settings.json is updated, tell me to restart Claude Code and reply "restarted" when ready.
+
+REPORT PHASE (after restart):
+- Ask me where to save the report (default: ~/Documents/seo-reports/<sitename>).
+- Ask if I have a keyword list ready or want help building one.
+- If I need help, ask me about my business (website, industry, services, location, competitors) and suggest 10-20 starter keywords for me to approve.
+- Confirm my Search Console property by listing my verified properties so I can pick.
+- Write keywords.yml in my project folder.
+- Pull 6 months of daily position data from Google Search Console.
+- Generate and open my candlestick report.
+- Summarise improving keywords, high-variance keywords, and declining keywords. Suggest 2-3 specific next actions.
 ```
 
-Claude does the rest. It will:
-
-- Check what's already installed on your machine
-- Walk you through Google Cloud setup (with clickable links)
-- Configure the GSC MCP server in your Claude Code settings
-- Install this skill into `~/.claude/skills/`
-- Ask you about your business and build a starter keyword list
-- Pull your data from Google Search Console
-- Generate your first candlestick report
-
-Total time: ~10 minutes, mostly waiting for Google Cloud screens to load.
+Total time: ~10 minutes for first install (mostly waiting for Google Cloud screens). Future reports take ~30 seconds.
 
 **Don't have Claude Code yet?** Get it free at https://claude.com/claude-code
 
